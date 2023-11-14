@@ -2,6 +2,9 @@ package lykrast.glassential;
 
 import java.util.function.Supplier;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,24 +39,43 @@ public class Glassential {
 		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 		BLOCKS.register(bus);
 		ITEMS.register(bus);
+		CREATIVE_MODE_TABS.register(bus);
 	}
 
 	private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
 	private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
-	
+	private static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(
+			BuiltInRegistries.CREATIVE_MODE_TAB.key(),
+			MODID);
+
+	private static final RegistryObject<Block> GLASS_DARK_ETHEREAL = makeBlock("glass_dark_ethereal", () -> new DarkEtherealGlassBlock(glassProp().noCollission(), false));
+	private static final RegistryObject<Block> GLASS_DARK_ETHEREAL_REVERSE = makeBlock("glass_dark_ethereal_reverse", () -> new DarkEtherealGlassBlock(glassProp().noCollission(), true));
+	private static final RegistryObject<Block> GLASS_ETHEREAL = makeBlock("glass_ethereal", () -> new EtherealGlassBlock(glassProp().noCollission(), false));
+	private static final RegistryObject<Block> GLASS_ETHEREAL_REVERSE = makeBlock("glass_ethereal_reverse", () -> new EtherealGlassBlock(glassProp().noCollission(), true));
+	private static final RegistryObject<Block> GLASS_GHOSTLY = makeBlock("glass_ghostly", () -> new TooltipGlassBlock(glassProp().noCollission(), "tooltip.glassential.ghostly"));
+	private static final RegistryObject<Block> GLASS_LIGHT = makeBlock("glass_light", () -> new TooltipGlassBlock(glassProp().lightLevel((b) -> 15), "tooltip.glassential.light"));
+	private static final RegistryObject<Block> GLASS_REDSTONE = makeBlock("glass_redstone", () -> new RedstoneGlassBlock(glassProp()));
+
 	static {
-		makeBlock("glass_dark_ethereal", () -> new DarkEtherealGlassBlock(glassProp().noCollission(), false), CreativeModeTab.TAB_BUILDING_BLOCKS);
-		makeBlock("glass_dark_ethereal_reverse", () -> new DarkEtherealGlassBlock(glassProp().noCollission(), true), CreativeModeTab.TAB_BUILDING_BLOCKS);
-		makeBlock("glass_ethereal", () -> new EtherealGlassBlock(glassProp().noCollission(), false), CreativeModeTab.TAB_BUILDING_BLOCKS);
-		makeBlock("glass_ethereal_reverse", () -> new EtherealGlassBlock(glassProp().noCollission(), true), CreativeModeTab.TAB_BUILDING_BLOCKS);
-		makeBlock("glass_ghostly", () -> new TooltipGlassBlock(glassProp().noCollission(), "tooltip.glassential.ghostly"), CreativeModeTab.TAB_BUILDING_BLOCKS);
-		makeBlock("glass_light", () -> new TooltipGlassBlock(glassProp().lightLevel((b) -> 15), "tooltip.glassential.light"), CreativeModeTab.TAB_BUILDING_BLOCKS);
-		makeBlock("glass_redstone", () -> new RedstoneGlassBlock(glassProp()), CreativeModeTab.TAB_REDSTONE);
+		CREATIVE_MODE_TABS.register("tab",
+				() -> CreativeModeTab.builder()
+						.title(Component.translatable("itemGroup.glassential.items"))
+						.icon(() -> new ItemStack(GLASS_ETHEREAL.get()))
+						.displayItems((context, entries) -> {
+							entries.accept(GLASS_DARK_ETHEREAL.get());
+							entries.accept(GLASS_DARK_ETHEREAL_REVERSE.get());
+							entries.accept(GLASS_ETHEREAL.get());
+							entries.accept(GLASS_ETHEREAL_REVERSE.get());
+							entries.accept(GLASS_GHOSTLY.get());
+							entries.accept(GLASS_LIGHT.get());
+							entries.accept(GLASS_REDSTONE.get());
+						})
+						.build());
 	}
 
-	private static RegistryObject<Block> makeBlock(String name, Supplier<Block> block, CreativeModeTab creativeTab) {
+	private static RegistryObject<Block> makeBlock(String name, Supplier<Block> block) {
 		RegistryObject<Block> regged = BLOCKS.register(name, block);
-		ITEMS.register(name, () -> new BlockItem(regged.get(), (new Item.Properties()).tab(creativeTab)));
+		ITEMS.register(name, () -> new BlockItem(regged.get(), (new Item.Properties())));
 		return regged;
 	}
 	
